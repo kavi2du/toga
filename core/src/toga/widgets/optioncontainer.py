@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any, Protocol, overload
 
@@ -10,8 +11,10 @@ from toga.platform import get_platform_factory
 from .base import StyleT, Widget
 
 if TYPE_CHECKING:
-    from typing import TypeAlias
-
+    if sys.version_info < (3, 10):
+        from typing_extensions import TypeAlias
+    else:
+        from typing import TypeAlias
     from toga.icons import IconContentT
 
     OptionContainerContentT: TypeAlias = (

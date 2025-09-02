@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from unittest.mock import Mock, call
 from warnings import catch_warnings, filterwarnings
 
@@ -10,11 +9,11 @@ from travertino.properties.validated import validated_property
 from travertino.size import BaseIntrinsicSize
 from travertino.style import BaseStyle
 
-from .utils import mock_apply
+from .utils import apply_dataclass, mock_apply
 
 
 @mock_apply
-@dataclass(kw_only=True, repr=False)
+@apply_dataclass
 class Style(BaseStyle):
     int_prop: int = validated_property(integer=True)
 
@@ -31,7 +30,7 @@ class Style(BaseStyle):
 
 
 @mock_apply
-@dataclass(kw_only=True, repr=False)
+@apply_dataclass
 class OldStyle(Style):
     # Uses two-argument layout(), as in Toga <= 0.4.8
     def layout(self, node, viewport):
@@ -39,7 +38,23 @@ class OldStyle(Style):
         super().layout(viewport)
 
 
-@dataclass(kw_only=True, repr=False)
+@mock_apply
+@apply_dataclass
+class TypeErrorStyle(Style):
+    # Uses the correct signature, but raises an unrelated TypeError in layout
+    def layout(self, viewport):
+        raise TypeError("An unrelated TypeError has occurred somewhere in layout()")
+
+
+@mock_apply
+@apply_dataclass
+class OldTypeErrorStyle(Style):
+    # Just to be extra safe...
+    def layout(self, node, viewport):
+        raise TypeError("An unrelated TypeError has occurred somewhere in layout()")
+
+
+@apply_dataclass
 class BrokenStyle(BaseStyle):
     def apply(self):
         raise AttributeError("Missing attribute, node not ready for style application")
@@ -56,7 +71,7 @@ class BrokenStyle(BaseStyle):
         self._applicator.node.layout.content_height = viewport.height * 2
 
 
-@dataclass(kw_only=True, repr=False)
+@apply_dataclass
 class AttributeTestStyle(BaseStyle):
     class IntrinsicSize(BaseIntrinsicSize):
         pass
@@ -203,6 +218,19 @@ def test_refresh_no_op():
     node = Node(style=Style())
     node.refresh(Viewport(width=100, height=100))
     node.style.apply.assert_not_called()
+
+
+@pytest.mark.parametrize("StyleClass", [TypeErrorStyle, OldTypeErrorStyle])
+def test_type_error_in_layout(StyleClass):
+    """The shim shouldn't hide unrelated TypeErrors."""
+
+    class Applicator:
+        def set_bounds(self):
+            pass
+
+    node = Node(style=StyleClass(), applicator=Applicator())
+    with pytest.raises(TypeError, match=r"unrelated TypeError"):
+        node.refresh(Viewport(50, 50))
 
 
 def test_add():
@@ -454,24 +482,18 @@ def test_assign_style_with_no_applicator():
 
 
 def test_apply_before_node_is_ready():
-    """The < 0.5 shim doesn't swallow the error when applying an unready style."""
+    """Triggering an apply raises a warning if the node is not ready to apply style."""
     style = BrokenStyle()
     applicator = Mock()
-    node = Node(style=style)
 
-    match = (
-        r"Failed to apply style when assigning applicator, or when assigning a new "
-        r"style once applicator is present\. Node should be sufficiently initialized "
-        r"to apply its style before it is assigned an applicator\."
-    )
-
-    with pytest.raises(RuntimeError, match=match):
+    with pytest.warns(RuntimeWarning):
+        node = Node(style=style)
         node.applicator = applicator
 
-    with pytest.raises(RuntimeError, match=match):
+    with pytest.warns(RuntimeWarning):
         node.style = BrokenStyle()
 
-    with pytest.raises(RuntimeError, match=match):
+    with pytest.warns(RuntimeWarning):
         Node(style=style, applicator=applicator)
 
 

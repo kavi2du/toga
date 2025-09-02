@@ -17,23 +17,11 @@ class ScrollContainerProbe(SimpleProbe):
 
     @property
     def document_height(self):
-        # Assert that the document container and the document itself have the same size.
-        # This is necessary to ensure that events propagate; see #2411.
-        assert self.impl.document_container.native.frame.size.height == (
-            content_height := self.native.contentSize.height
-        )
-
-        return content_height
+        return self.native.contentSize.height
 
     @property
     def document_width(self):
-        # Assert that the document container and the document itself have the same size.
-        # This is necessary to ensure that events propagate; see #2411.
-        assert self.impl.document_container.native.frame.size.width == (
-            content_width := self.native.contentSize.width
-        )
-
-        return content_width
+        return self.native.contentSize.width
 
     async def scroll(self):
         if self.document_height <= self.height:

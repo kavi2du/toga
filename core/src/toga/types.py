@@ -1,11 +1,15 @@
 from __future__ import annotations
 
+import sys
 from typing import TYPE_CHECKING, NamedTuple
 
 import toga
 
 if TYPE_CHECKING:
-    from typing import TypeAlias
+    if sys.version_info < (3, 10):
+        from typing_extensions import TypeAlias
+    else:
+        from typing import TypeAlias
 
     PositionT: TypeAlias = toga.Position | tuple[int, int]
     SizeT: TypeAlias = toga.Size | tuple[int, int]

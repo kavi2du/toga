@@ -7,22 +7,25 @@ import traceback
 import warnings
 from abc import ABC
 from collections.abc import Awaitable, Callable, Generator
-from typing import TYPE_CHECKING, Any, NoReturn, Protocol, TypeVar
+from typing import TYPE_CHECKING, Any, NoReturn, Protocol, TypeVar, Union
 
 if TYPE_CHECKING:
-    from typing import TypeAlias
+    if sys.version_info < (3, 10):
+        from typing_extensions import TypeAlias
+    else:
+        from typing import TypeAlias
 
     T = TypeVar("T")
 
     GeneratorReturnT = TypeVar("GeneratorReturnT")
     HandlerGeneratorReturnT: TypeAlias = Generator[
-        float | None, object, GeneratorReturnT
+        Union[float, None], object, GeneratorReturnT
     ]
 
     HandlerSyncT: TypeAlias = Callable[..., object]
     HandlerAsyncT: TypeAlias = Callable[..., Awaitable[object]]
     HandlerGeneratorT: TypeAlias = Callable[..., HandlerGeneratorReturnT[object]]
-    HandlerT: TypeAlias = HandlerSyncT | HandlerAsyncT | HandlerGeneratorT
+    HandlerT: TypeAlias = Union[HandlerSyncT, HandlerAsyncT, HandlerGeneratorT]
     WrappedHandlerT: TypeAlias = Callable[..., object]
 
 

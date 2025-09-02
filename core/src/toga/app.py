@@ -214,13 +214,12 @@ class App:
             # `python -m appname`, then __main__.__package__ will be an empty string.
             #
             # If the code is contained in appname.py, and you start the app using
-            # `python appname.py`, then __main__.__package__ will be None - unless
-            # the app has been run under pdb, in which case `__package__` doesn't exist.
+            # `python appname.py`, then __main__.__package__ will be None.
             #
             # If the code is contained in appname/__main__.py, and you start the app
             # using `python -m appname`, then __main__.__package__ will be "appname".
             try:
-                main_module_pkg = getattr(sys.modules["__main__"], "__package__", None)
+                main_module_pkg = sys.modules["__main__"].__package__
                 if main_module_pkg:
                     app_name = main_module_pkg
             except KeyError:

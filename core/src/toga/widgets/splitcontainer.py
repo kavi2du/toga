@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any
 
@@ -10,7 +11,10 @@ from toga.window import Window
 from .base import StyleT, Widget
 
 if TYPE_CHECKING:
-    from typing import TypeAlias
+    if sys.version_info < (3, 10):
+        from typing_extensions import TypeAlias
+    else:
+        from typing import TypeAlias
 
     SplitContainerContentT: TypeAlias = Widget | tuple[Widget, float] | None
 

@@ -91,9 +91,6 @@ class MultilineTextInput(Widget):
             else:
                 self.native_textview.set_buffer(self.buffer)
 
-        # Wait until the text change is fully completed
-        self.flush_gtk_events()
-
     def get_readonly(self):
         return not self.native_textview.get_property("editable")
 

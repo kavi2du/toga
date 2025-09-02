@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib
 import os
+import sys
 import warnings
 from functools import cache
 from pathlib import Path
@@ -15,7 +16,10 @@ from toga.platform import entry_points, get_platform_factory
 warnings.filterwarnings("default", category=DeprecationWarning)
 
 if TYPE_CHECKING:
-    from typing import TypeAlias
+    if sys.version_info < (3, 10):
+        from typing_extensions import TypeAlias
+    else:
+        from typing import TypeAlias
 
     # Define a type variable for generics where an Image type is required.
     ImageT = TypeVar("ImageT")
@@ -119,10 +123,10 @@ class Image:
         self._path = None
 
         # Any "lump of bytes" should be valid here.
-        if isinstance(src, bytes | bytearray | memoryview):
+        if isinstance(src, (bytes, bytearray, memoryview)):
             self._impl = self.factory.Image(interface=self, data=src)
 
-        elif isinstance(src, str | Path):
+        elif isinstance(src, (str, Path)):
             self._path = toga.App.app.paths.app / src
             if not self._path.is_file():
                 raise FileNotFoundError(f"Image file {self._path} does not exist")
